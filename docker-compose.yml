@@ -1,0 +1,153 @@
+version: '3.7'
+
+networks:
+  monitor-net:
+    driver: bridge
+  web:
+    external: true
+
+volumes:
+    prometheus_data: {}
+    grafana_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    ports:
+      - 9006:9090
+    networks:
+      - monitor-net
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${HTTP_HOST}`)"
+      - "traefik.http.routers.grafana.tls=false"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.tls.certresolver=lets-encrypt"
+      - "traefik.port=9090"
+
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_VERSION}
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
+    ports:
+      - 9005:9093
+    networks:
+      - monitor-net
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.${HTTP_HOST}`)"
+      - "traefik.http.routers.alertmanager.tls=false"
+      - "traefik.http.routers.alertmanager.entrypoints=web"
+      - "traefik.http.routers.alertmanager.tls.certresolver=lets-encrypt"
+      - "traefik.port=9093"
+
+  nodeexporter:
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION}
+    container_name: nodeexporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /host/sys/class:/host/sys/class:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    ports:
+      - 9004:9100
+    networks:
+      - monitor-net
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nodeexporter.rule=Host(`nodeexporter.${HTTP_HOST}`)"
+      - "traefik.http.routers.nodeexporter.tls=false"
+      - "traefik.http.routers.nodeexporter.entrypoints=web"
+      - "traefik.http.routers.nodeexporter.tls.certresolver=lets-encrypt"
+      - "traefik.port=9100"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:${CADVISOR_VERSION}
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro #doesn't work on MacOS only for Linux
+    restart: unless-stopped
+    ports:
+      - 9003:8080
+    networks:
+      - monitor-net
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cadvisor.rule=Host(`cadvisor.${HTTP_HOST}`)"
+      - "traefik.http.routers.cadvisor.tls=false"
+      - "traefik.http.routers.cadvisor.entrypoints=web"
+      - "traefik.http.routers.cadvisor.tls.certresolver=lets-encrypt"
+      - "traefik.port=8080"
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    ports:
+      - 9002:3000
+    networks:
+      - monitor-net
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${HTTP_HOST}`)"
+      - "traefik.http.routers.grafana.tls=false"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.tls.certresolver=lets-encrypt"
+      - "traefik.port=3000"
+
+  pushgateway:
+    image: prom/pushgateway:${PUSH_GATEWAY_VERSION}
+    container_name: pushgateway
+    restart: unless-stopped
+    ports:
+      - 9001:9091
+    networks:
+      - monitor-net
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pushgateway.rule=Host(`pushgateway.${HTTP_HOST}`)"
+      - "traefik.http.routers.pushgateway.tls=false"
+      - "traefik.http.routers.pushgateway.entrypoints=web"
+      - "traefik.http.routers.pushgateway.tls.certresolver=lets-encrypt"
+      - "traefik.port=9091"
