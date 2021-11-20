@@ -33,6 +33,10 @@ scrape_configs:
     honor_labels: true
     static_configs:
       - targets: ['pushgateway:9091']
+  - job_name: 'traefik'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['traefik:8082']
 
 
 alerting:
