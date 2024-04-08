@@ -32,9 +32,9 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.prometheus.rule=Host(`grafana.${HTTP_HOST}`)"
-      - "traefik.http.routers.prometheus.tls=false"
-      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.${HTTP_HOST}`)"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
       - "traefik.http.routers.prometheus.middlewares=simpleauth@file"
       - "traefik.http.routers.prometheus.tls.certresolver=lets-encrypt"
       - "traefik.port=9090"
@@ -56,8 +56,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.${HTTP_HOST}`)"
-      - "traefik.http.routers.alertmanager.tls=false"
-      - "traefik.http.routers.alertmanager.entrypoints=web"
+      - "traefik.http.routers.alertmanager.tls=true"
+      - "traefik.http.routers.alertmanager.entrypoints=websecure"
       - "traefik.http.routers.alertmanager.middlewares=simpleauth@file"
       - "traefik.http.routers.alertmanager.tls.certresolver=lets-encrypt"
       - "traefik.port=9093"
@@ -84,8 +84,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nodeexporter.rule=Host(`nodeexporter.${HTTP_HOST}`)"
-      - "traefik.http.routers.nodeexporter.tls=false"
-      - "traefik.http.routers.nodeexporter.entrypoints=web"
+      - "traefik.http.routers.nodeexporter.tls=true"
+      - "traefik.http.routers.nodeexporter.entrypoints=websecure"
       - "traefik.http.routers.nodeexporter.middlewares=simpleauth@file"
       - "traefik.http.routers.nodeexporter.tls.certresolver=lets-encrypt"
       - "traefik.port=9100"
@@ -108,8 +108,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.cadvisor.rule=Host(`cadvisor.${HTTP_HOST}`)"
-      - "traefik.http.routers.cadvisor.tls=false"
-      - "traefik.http.routers.cadvisor.entrypoints=web"
+      - "traefik.http.routers.cadvisor.tls=true"
+      - "traefik.http.routers.cadvisor.entrypoints=websecure"
       - "traefik.http.routers.cadvisor.middlewares=simpleauth@file"
       - "traefik.http.routers.cadvisor.tls.certresolver=lets-encrypt"
       - "traefik.port=8080"
@@ -134,8 +134,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${HTTP_HOST}`)"
-      - "traefik.http.routers.grafana.tls=false"
-      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.routers.grafana.middlewares=simpleauth@file"
       - "traefik.http.routers.grafana.tls.certresolver=lets-encrypt"
       - "traefik.port=3000"
@@ -152,8 +152,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pushgateway.rule=Host(`pushgateway.${HTTP_HOST}`)"
-      - "traefik.http.routers.pushgateway.tls=false"
-      - "traefik.http.routers.pushgateway.entrypoints=web"
+      - "traefik.http.routers.pushgateway.tls=true"
+      - "traefik.http.routers.pushgateway.entrypoints=websecure"
       - "traefik.http.routers.pushgateway.middlewares=simpleauth@file"
       - "traefik.http.routers.pushgateway.tls.certresolver=lets-encrypt"
       - "traefik.port=9091"
